@@ -1,6 +1,6 @@
 CXX        = g++
 
-CXXFLAGS    = -O3 -std=c++0x -Wall
+CXXFLAGS    = -O3 -std=c++0x -Wall -I../PsBL/src -L../PsBL/src
 
 all: calcEnrich calcRT combineRTreplicates filterEnrich normalizeRTfile normedRT2bedGraph
 

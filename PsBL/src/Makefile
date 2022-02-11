@@ -2,7 +2,7 @@ CC        = g++
 
 TARGET_DIR    = PsBL-1.0.0
 
-CPPFLAGS    = -O3 -std=c++0x -Wall -D NDEBUG -pthread -pipe
+# CPPFLAGS    = -O3 -std=c++0x -Wall -D NDEBUG -pthread -pipe
 
 HYBRIDINC = -I../RNA_Structure_Class
 

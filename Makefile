@@ -1,6 +1,6 @@
 CXX        = g++
 
-CXXFLAGS    = -O3 -std=c++0x -Wall -D NDEBUG -pthread -pipe
+CXXFLAGS    = -O3 -std=c++0x -Wall -D NDEBUG -pthread -pipe -I./PsBL/src -L./PsBL/src
 TARGET_DIR  = bin/Functions
 
 

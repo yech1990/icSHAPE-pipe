@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
 import sys
 import numpy
@@ -7,7 +7,8 @@ import getopt
 import os
 import version
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 
@@ -52,7 +53,6 @@ readDistributionStatistic \
 """
 
 
-
 Usage = """
 readDistributionStatistic - Count fastq or sam to statistic reads distribution
 ==============================================================================
@@ -85,168 +85,204 @@ contains un-mapped reads
 \x1b[1mAUTHOR:\x1b[0m
     Li Pan
 
-""" % (sys.argv[0], version.Version)
+""" % (
+    sys.argv[0],
+    version.Version,
+)
+
 
 def load_getoutput():
     import subprocess
-    if 'getoutput' in dir(subprocess):
+
+    if "getoutput" in dir(subprocess):
         return subprocess.getoutput
     else:
         import commands
+
         return commands.getoutput
+
 
 getoutput = load_getoutput()
 
+
 def init():
-    params = { 
-        'outFolder': None,
-        'sampleTags': None,
-        'processTags': None,
-        'filepipe': []
+    params = {
+        "outFolder": None,
+        "sampleTags": None,
+        "processTags": None,
+        "filepipe": [],
     }
-    opts, args = getopt.getopt(sys.argv[1:], 'h@:o:', ['sampletag=','processtag='])
+    opts, args = getopt.getopt(sys.argv[1:], "h@:o:", ["sampletag=", "processtag="])
     for op, value in opts:
-        if op == '-h':
+        if op == "-h":
             print(Usage)
             sys.exit(-1)
         # Basic Parameters
-        elif op == '-@':
-            files = value.strip().split(',')
-            params['filepipe'].append(files)
-        elif op == '-o':
-            params['outFolder'] = os.path.abspath(value).rstrip('/') + '/'
-        elif op == '--sampletag':
-            tags = value.strip().split(',')
-            params['sampleTags'] = tags
-        elif op == '--processtag':
-            tags = value.strip().split(',')
-            params['processTags'] = tags
-        
+        elif op == "-@":
+            files = value.strip().split(",")
+            params["filepipe"].append(files)
+        elif op == "-o":
+            params["outFolder"] = os.path.abspath(value).rstrip("/") + "/"
+        elif op == "--sampletag":
+            tags = value.strip().split(",")
+            params["sampleTags"] = tags
+        elif op == "--processtag":
+            tags = value.strip().split(",")
+            params["processTags"] = tags
+
         else:
-            sys.stderr.writelines( "Error: unrecognized parameter: "+op+"\n" )
+            sys.stderr.writelines("Error: unrecognized parameter: " + op + "\n")
             print(Usage)
             sys.exit(-1)
-    
+
     # check
-    if not params['outFolder'] or not params['sampleTags'] or not params['processTags'] or not params['filepipe']:
-        sys.stderr.writelines( "Error: Specify -@ --sampletag --processtag -o\n" )
+    if (
+        not params["outFolder"]
+        or not params["sampleTags"]
+        or not params["processTags"]
+        or not params["filepipe"]
+    ):
+        sys.stderr.writelines("Error: Specify -@ --sampletag --processtag -o\n")
         print(Usage)
         exit(-1)
-    
-    fileLen = len(params['sampleTags'])
-    if fileLen != len(params['filepipe']):
-        sys.stderr.writelines( "Error: different number of -@ (%d) and --sampletag (%d) \n" % (fileLen, len(params['filepipe'])) )
+
+    fileLen = len(params["sampleTags"])
+    if fileLen != len(params["filepipe"]):
+        sys.stderr.writelines(
+            "Error: different number of -@ (%d) and --sampletag (%d) \n"
+            % (fileLen, len(params["filepipe"]))
+        )
         print(Usage)
         exit(-1)
-    
-    processLen = len(params['processTags'])
-    if processLen != len(params['filepipe'][0]):
-        sys.stderr.writelines( "Error: different number of -@ files (%d) and --processTags (%d) \n" % (processLen, len(params['filepipe'][0])) )
+
+    processLen = len(params["processTags"])
+    if processLen != len(params["filepipe"][0]):
+        sys.stderr.writelines(
+            "Error: different number of -@ files (%d) and --processTags (%d) \n"
+            % (processLen, len(params["filepipe"][0]))
+        )
         print(Usage)
         exit(-1)
-    
-    for file in params['filepipe']:
+
+    for file in params["filepipe"]:
         if processLen != len(file):
-            sys.stderr.writelines( "Error: different number of -@ files (%d) and --processTags (%d) \n" % (processLen, len(file)) )
+            sys.stderr.writelines(
+                "Error: different number of -@ files (%d) and --processTags (%d) \n"
+                % (processLen, len(file))
+            )
             print(Usage)
             exit(-1)
-    
+
     return params
 
+
 def count_fq(inFile):
-    
-    if inFile.endswith('.gz'):
-        count = getoutput("gzip -d %s -c | wc -l" % (inFile, ))
+
+    if inFile.endswith(".gz"):
+        count = getoutput("gzip -d %s -c | wc -l" % (inFile,))
         count = int(count)
     else:
-        count = getoutput("wc -l %s | awk '{print $1}'" % (inFile, ))
+        count = getoutput("wc -l %s | awk '{print $1}'" % (inFile,))
         count = int(count)
-    
-    assert count%4 == 0
-    return count/4
+
+    assert count % 4 == 0
+    return count / 4
+
 
 def count_sam(inFile):
-    
-    CMD = "samtools view %s | awk 'BEGIN{map=0;unmap=0;}{if($3==\"*\"){unmap+=1}else{map+=1}}END{print map\"\t\"unmap}'"
-    
-    mapcount, unmapcount = getoutput(CMD % (inFile, )).strip().split('\t')
+
+    CMD = 'samtools view %s | awk \'BEGIN{map=0;unmap=0;}{if($3=="*"){unmap+=1}else{map+=1}}END{print map"\t"unmap}\''
+
+    mapcount, unmapcount = getoutput(CMD % (inFile,)).strip().split("\t")
     return int(mapcount), int(unmapcount)
 
-def stackedBarPlot( stackedBars, stackedLabels, barLabels, stackedColors=None ):
+
+def stackedBarPlot(stackedBars, stackedLabels, barLabels, stackedColors=None):
     """
     stackedBars = [ [29, 10, 21], [24, 11, 33] ]
-    stackedLabels = ['stack1', 'stack2', 'stack3'] 
+    stackedLabels = ['stack1', 'stack2', 'stack3']
     barLabels = ['bar1', 'bar2']
     stackedColors = ['red', 'blue', 'green']
     stackedBarPlot( stackedBars, stackedLabels, barLabels, stackedColors)
     """
-    
+
     import matplotlib.pyplot as plt
-    
+
     def getStackedBarList(stackedBars, stackedLabels, barLabels):
         barList = []
-        for bar,bar_label in zip(stackedBars,barLabels):
-            for bar_item,stack_label in zip(bar,stackedLabels):
-                barList.append( (bar_item, stack_label, bar_label) )
+        for bar, bar_label in zip(stackedBars, barLabels):
+            for bar_item, stack_label in zip(bar, stackedLabels):
+                barList.append((bar_item, stack_label, bar_label))
         return barList
-    
+
     assert len(stackedBars) == len(barLabels)
-    assert  len(stackedBars[0]) == len(stackedLabels)
-    
+    assert len(stackedBars[0]) == len(stackedLabels)
+
     if stackedColors:
         assert len(stackedLabels) == len(stackedColors)
     else:
         stackedColors = sns.color_palette("hls", len(stackedLabels))
-    
+
     stackedBarList = getStackedBarList(stackedBars, stackedLabels, barLabels)
-    
-    last_y = [0]*len(barLabels)
-    for i,stack_label in enumerate( stackedLabels ):
-        sub_dict = {it[2]:it[0] for it in stackedBarList if it[1]==stack_label}
-        
+
+    last_y = [0] * len(barLabels)
+    for i, stack_label in enumerate(stackedLabels):
+        sub_dict = {it[2]: it[0] for it in stackedBarList if it[1] == stack_label}
+
         y = []
         for bar_label in barLabels:
             y.append(sub_dict[bar_label])
-        
-        plt.bar(range(1,len(barLabels)+1), y, color=stackedColors[i], bottom=last_y, label=stack_label, width=0.3, linewidth=0)
-        last_y = [ y_i+y_j for y_i,y_j in zip(y, last_y) ]
-    
+
+        plt.bar(
+            range(1, len(barLabels) + 1),
+            y,
+            color=stackedColors[i],
+            bottom=last_y,
+            label=stack_label,
+            width=0.3,
+            linewidth=0,
+        )
+        last_y = [y_i + y_j for y_i, y_j in zip(y, last_y)]
+
     plt.legend(frameon=False)
-    plt.xticks( range(1,len(barLabels)+1), barLabels )
+    plt.xticks(range(1, len(barLabels) + 1), barLabels)
     plt.xticks(rotation=45)
 
 
 def count_pipe(pipefiles):
     readcount_list = []
-    for i,file in enumerate(pipefiles):
-        print("count: "+file)
-        if file.endswith('fastq') or file.endswith('.fq') or file.endswith('fastq.gz') or file.endswith('fq.gz'):
+    for i, file in enumerate(pipefiles):
+        print("count: " + file)
+        if (
+            file.endswith("fastq")
+            or file.endswith(".fq")
+            or file.endswith("fastq.gz")
+            or file.endswith("fq.gz")
+        ):
             readcount = count_fq(file)
             readcount_list.append(readcount)
-        elif file.endswith('.sam') or file.endswith('.bam'):
-            mapcount,unmapcount = count_sam(file)
+        elif file.endswith(".sam") or file.endswith(".bam"):
+            mapcount, unmapcount = count_sam(file)
             if unmapcount == 0:
-                readcount_list.append( mapcount )
+                readcount_list.append(mapcount)
             else:
-                if i == len(pipefiles)-1:
-                    readcount_list.append( (mapcount,unmapcount) )
+                if i == len(pipefiles) - 1:
+                    readcount_list.append((mapcount, unmapcount))
                 else:
-                    readcount_list.append( mapcount+unmapcount )
+                    readcount_list.append(mapcount + unmapcount)
     return readcount_list
 
 
-
-
 params = init()
-if not os.path.exists(params['outFolder']):
-    os.mkdir(params['outFolder'])
+if not os.path.exists(params["outFolder"]):
+    os.mkdir(params["outFolder"])
 
-if not os.path.exists(params['outFolder']+'img'):
-    os.mkdir(params['outFolder']+'img')
+if not os.path.exists(params["outFolder"] + "img"):
+    os.mkdir(params["outFolder"] + "img")
 
 
-p = Pool(len(params['filepipe']))
-ReadCount = p.map(count_pipe, params['filepipe'])
+p = Pool(len(params["filepipe"]))
+ReadCount = p.map(count_pipe, params["filepipe"])
 
 has_final_sam = True
 for data in ReadCount:
@@ -256,67 +292,98 @@ for data in ReadCount:
 if has_final_sam:
     for data in ReadCount:
         if data[-2] != sum(data[-1]):
-            sys.stderr.writelines("Warning: number of final sam file (%d) != number of read before map (%d)\n" % (data[-2], sum(data[-1])))
+            sys.stderr.writelines(
+                "Warning: number of final sam file (%d) != number of read before map (%d)\n"
+                % (data[-2], sum(data[-1]))
+            )
 
 bar_data = []
 for data in ReadCount:
     tmp_bar_data = []
-    for i in range(1,len(data)-1):
-        tmp_bar_data.append( data[i-1]-data[i] )
+    for i in range(1, len(data) - 1):
+        tmp_bar_data.append(data[i - 1] - data[i])
     if has_final_sam:
-        tmp_bar_data.append( data[-1][0] )
-        tmp_bar_data.append( data[-1][1] )
+        tmp_bar_data.append(data[-1][0])
+        tmp_bar_data.append(data[-1][1])
     else:
-        tmp_bar_data.append( data[-1] )
+        tmp_bar_data.append(data[-1])
     bar_data.append(tmp_bar_data)
 
-processTags = params['processTags'][1:]
-sampleTags = params['sampleTags']
+processTags = params["processTags"][1:]
+sampleTags = params["sampleTags"]
 
 if has_final_sam:
-    processTags += ['un-mapped']
+    processTags += ["un-mapped"]
 
-colors = ['#ffc107','#00ffff','#ffdddd','#8bc34a','#ffffcc','#cddc39','#2196f3','#87ceeb','#607d8b','#00bcd4']
+colors = [
+    "#ffc107",
+    "#00ffff",
+    "#ffdddd",
+    "#8bc34a",
+    "#ffffcc",
+    "#cddc39",
+    "#2196f3",
+    "#87ceeb",
+    "#607d8b",
+    "#00bcd4",
+]
 
 
-width = int(len(processTags)/2 + 3)
+width = int(len(processTags) / 2 + 3)
 plt.figure(figsize=(width, 5))
-stackedBarPlot( bar_data, processTags, sampleTags, colors[:len(processTags)])
+stackedBarPlot(bar_data, processTags, sampleTags, colors[: len(processTags)])
 plt.xlabel("Sample")
 plt.ylabel("Number of reads")
 plt.tight_layout()
-plt.savefig(params['outFolder']+'img/barplot.png')
+plt.savefig(params["outFolder"] + "img/barplot.png")
 plt.close()
 
 
 table_head = "               <tr>\n                   <th>Sample name</th>\n"
-for processname in [params['processTags'][0]]+processTags:
+for processname in [params["processTags"][0]] + processTags:
     table_head += "                   <th>{}</th>\n".format(processname)
 
 table_head += "               </tr>\n"
 
 table_content = ""
-for samplename,data in zip(sampleTags,ReadCount):
+for samplename, data in zip(sampleTags, ReadCount):
     total = data[0]
     table_content += "               <tr>\n"
-    table_content += "                   <td>"+samplename+"</td>\n"
-    table_content += "                   <td>%s (%.2f%%)</td>\n" % ("{:,}".format(int(data[0])), 100.0)
+    table_content += "                   <td>" + samplename + "</td>\n"
+    table_content += "                   <td>%s (%.2f%%)</td>\n" % (
+        "{:,}".format(int(data[0])),
+        100.0,
+    )
     for value in data[1:-1]:
-        table_content += "                   <td>%s (%.2f%%)</td>\n" % ("{:,}".format(int(value)), 100.0*value/total)
+        table_content += "                   <td>%s (%.2f%%)</td>\n" % (
+            "{:,}".format(int(value)),
+            100.0 * value / total,
+        )
     if has_final_sam:
-        table_content += "                   <td>%s (%.2f%%)</td>\n" % ("{:,}".format(int(data[-1][0])), 100.0*data[-1][0]/total)
-        table_content += "                   <td>%s (%.2f%%)</td>\n" % ("{:,}".format(int(data[-1][1])), 100.0*data[-1][1]/total)
+        table_content += "                   <td>%s (%.2f%%)</td>\n" % (
+            "{:,}".format(int(data[-1][0])),
+            100.0 * data[-1][0] / total,
+        )
+        table_content += "                   <td>%s (%.2f%%)</td>\n" % (
+            "{:,}".format(int(data[-1][1])),
+            100.0 * data[-1][1] / total,
+        )
     else:
-        table_content += "                   <td>%s (%.2f%%)</td>\n" % ("{:,}".format(int(data[-1])), 100.0*data[-1]/total)
+        table_content += "                   <td>%s (%.2f%%)</td>\n" % (
+            "{:,}".format(int(data[-1])),
+            100.0 * data[-1] / total,
+        )
     table_content += "               </tr>\n"
 
 table = """
         <table class="w3-table-all" style="width:100%;overflow-x: scroll;">
 {}
         </table>
-""".format( table_head + table_content )
+""".format(
+    table_head + table_content
+)
 
-#print(table)
+# print(table)
 
 html = """
 <!DOCTYPE html>
@@ -368,7 +435,6 @@ window.onclick = function(event) {{
 
 command = " ".join(sys.argv)
 
-OUT = open(params['outFolder']+'report.html', 'w')
+OUT = open(params["outFolder"] + "report.html", "w")
 OUT.writelines(html.format(command, table))
 OUT.close()
-

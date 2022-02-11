@@ -1,7 +1,7 @@
 CXX        = g++
 
 #CXXFLAGS    = -O3 -std=c++0x -Wall -lPsBL -lhts
-CXXFLAGS    = -O3 -std=c++0x -Wall -lPsBL -lhts -I/Users/lee/code/PsBL/src -L/Users/lee/code/PsBL/src
+CXXFLAGS    = -O3 -std=c++0x -Wall -lPsBL -lhts -I../PsBL/src -L../PsBL/src
 
 all: sam2tab calc_sliding_shape countRT
 
